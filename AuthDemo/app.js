@@ -8,7 +8,7 @@ var express                 = require("express"),
    
 var app = express();   
 
-mongoose.connect("mongodb://localhost/auth_demo_app", {useMongoClient: true});   
+mongoose.connect("mongodb://localhost/auth_demo_app", {useMongoClient: true});
 app.use(require("express-session")({
    secret: "this is secret!",
    resave: false,
@@ -18,9 +18,14 @@ app.use(require("express-session")({
 app.set("view engine","ejs");
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(bodyParses.urlencoded({extended: true}));
 
 passport.serializeUser(user.serializeUser());
 passport.deserializeUser(user.deserializeUser());
+
+//====================
+//   ROUTES
+//====================
 
 app.get("/",function(req, res){
     res.render("home");
@@ -29,6 +34,26 @@ app.get("/",function(req, res){
 app.get("/secret", function(req,res){
     res.render("secret");
 })
+
+//show sign up form
+app.get("/register", function(req, res) {
+    res.render("register");
+})
+
+app.post("/register", function(req, res){
+    req.body.username
+    req.body.password
+    user.register(new user({username: req.body.username}), req.body.password, function(err, user){
+        if(err){
+            console.log(err);
+            return res.render("register");
+        } 
+        
+        passport.authenticate("local")(req, res, function(){
+            res.redirect("/secret");
+        });
+    })
+});
 
 app.listen(process.env.PORT, process.env.IP, function(){
     console.log("Server has started!");
